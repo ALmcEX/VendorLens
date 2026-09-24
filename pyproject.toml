@@ -2,7 +2,7 @@
 name = "vendorlens-workspace"
 version = "0.1.0"
 requires-python = ">=3.13,<3.14"
-dependencies = ["vendorlens-api", "vendorlens-core"]
+dependencies = ["vendorlens-api", "vendorlens-core", "vendorlens-worker"]
 
 [dependency-groups]
 dev = [
@@ -19,13 +19,14 @@ package = false
 [tool.uv.sources]
 vendorlens-api = { workspace = true }
 vendorlens-core = { workspace = true }
+vendorlens-worker = { workspace = true }
 
 [tool.uv.workspace]
-members = ["apps/api", "packages/vendorlens-core"]
+members = ["apps/api", "apps/worker", "packages/vendorlens-core"]
 
 [tool.pytest.ini_options]
 addopts = "--strict-config --strict-markers"
-testpaths = ["apps/api/tests", "packages/vendorlens-core/tests"]
+testpaths = ["apps/api/tests", "apps/worker/tests", "packages/vendorlens-core/tests"]
 
 [tool.ruff]
 line-length = 100
@@ -35,10 +36,10 @@ target-version = "py313"
 select = ["E", "F", "I", "UP", "B", "SIM"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["vendorlens_api", "vendorlens_core"]
+known-first-party = ["vendorlens_api", "vendorlens_core", "vendorlens_worker"]
 
 [tool.mypy]
 python_version = "3.13"
 strict = true
-packages = ["vendorlens_api", "vendorlens_core"]
-mypy_path = ["apps/api/src", "packages/vendorlens-core/src"]
+packages = ["vendorlens_api", "vendorlens_core", "vendorlens_worker"]
+mypy_path = ["apps/api/src", "apps/worker/src", "packages/vendorlens-core/src"]
