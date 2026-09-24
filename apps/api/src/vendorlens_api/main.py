@@ -12,14 +12,18 @@ from vendorlens_api.problems import (
     validation_exception_handler,
 )
 from vendorlens_api.routes.health import create_health_router
+from vendorlens_api.routes.jobs import create_jobs_router
+from vendorlens_api.services.jobs import JobOperations, UnavailableJobService
 
 
 def create_app(
     settings: Settings | None = None,
     probes: ProbeSet | None = None,
+    job_service: JobOperations | None = None,
 ) -> FastAPI:
     active_settings = settings or Settings()
     active_probes = probes or HealthyProbeSet()
+    active_job_service = job_service or UnavailableJobService()
 
     app = FastAPI(title="VendorLens API", version="0.1.0")
     app.middleware("http")(request_id_middleware)
@@ -36,6 +40,12 @@ def create_app(
         create_health_router(
             active_probes,
             timeout_seconds=active_settings.dependency_timeout_seconds,
+        )
+    )
+    app.include_router(
+        create_jobs_router(
+            active_job_service,
+            trust_proxy_headers=active_settings.trust_proxy_headers,
         )
     )
     return app
