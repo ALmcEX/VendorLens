@@ -1,0 +1,51 @@
+services:
+  - type: web
+    name: vendorlens-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./infra/docker/api.Dockerfile
+    dockerContext: .
+    healthCheckPath: /health/live
+    autoDeployTrigger: commit
+    envVars:
+      - key: VENDORLENS_DATABASE_URL
+        sync: false
+      - key: VENDORLENS_SUPABASE_URL
+        sync: false
+      - key: VENDORLENS_SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: VENDORLENS_CORS_ORIGINS
+        sync: false
+      - key: VENDORLENS_STORAGE_BUCKET
+        value: vendor-documents
+      - key: VENDORLENS_QUEUE_NAME
+        value: example_jobs
+      - key: VENDORLENS_TRUST_PROXY_HEADERS
+        value: "true"
+      - key: VENDORLENS_REQUEST_LIMIT
+        value: "5"
+      - key: VENDORLENS_REQUEST_WINDOW_SECONDS
+        value: "60"
+      - key: VENDORLENS_QUEUE_DEPTH_LIMIT
+        value: "100"
+
+  - type: worker
+    name: vendorlens-worker
+    runtime: docker
+    plan: 0.5c-512mb
+    dockerfilePath: ./infra/docker/worker.Dockerfile
+    dockerContext: .
+    autoDeployTrigger: commit
+    preDeployCommand: python -m vendorlens_worker.migrate
+    maxShutdownDelaySeconds: 30
+    envVars:
+      - key: VENDORLENS_DATABASE_URL
+        sync: false
+      - key: VENDORLENS_QUEUE_NAME
+        value: example_jobs
+      - key: VENDORLENS_VISIBILITY_TIMEOUT_SECONDS
+        value: "30"
+      - key: VENDORLENS_MAX_ATTEMPTS
+        value: "3"
+      - key: VENDORLENS_SHUTDOWN_GRACE_SECONDS
+        value: "20"

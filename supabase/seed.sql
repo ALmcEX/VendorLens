@@ -1,0 +1,1 @@
+-- The foundation release intentionally contains no seed data.

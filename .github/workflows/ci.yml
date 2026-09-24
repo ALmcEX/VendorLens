@@ -1,0 +1,90 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    name: Python
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+          enable-cache: true
+      - run: uv sync --frozen --all-packages
+      - run: uv run ruff check packages apps tests
+      - run: uv run ruff format --check packages apps tests
+      - run: uv run mypy packages/vendorlens-core/src apps/api/src apps/worker/src
+      - run: uv run pytest packages/vendorlens-core/tests apps/api/tests apps/worker/tests -q
+
+  web:
+    name: Web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.19.0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+
+  supabase:
+    name: Supabase
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+          enable-cache: true
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.117.0
+      - run: uv sync --frozen --all-packages
+      - run: supabase start
+      - run: supabase db reset
+      - name: Export local connection details
+        shell: bash
+        run: |
+          status="$(supabase status -o json)"
+          db_url="$(jq -r '.DB_URL' <<<"$status")"
+          api_url="$(jq -r '.API_URL' <<<"$status")"
+          service_key="$(jq -r '.SERVICE_ROLE_KEY' <<<"$status")"
+          container_db="${db_url/postgresql:\/\//postgresql+asyncpg:\/\/}"
+          container_db="${container_db//127.0.0.1/host.docker.internal}"
+          container_api="${api_url//127.0.0.1/host.docker.internal}"
+          echo "VENDORLENS_TEST_DATABASE_URL=$db_url" >> "$GITHUB_ENV"
+          echo "VENDORLENS_CONTAINER_DATABASE_URL=$container_db" >> "$GITHUB_ENV"
+          echo "VENDORLENS_CONTAINER_SUPABASE_URL=$container_api" >> "$GITHUB_ENV"
+          echo "VENDORLENS_SUPABASE_SERVICE_ROLE_KEY=$service_key" >> "$GITHUB_ENV"
+      - run: uv run pytest tests/integration/test_migration.py -q
+      - run: docker compose up -d --build --wait --wait-timeout 180 api worker
+      - run: uv run pytest tests/smoke/local_smoke.py -q
+      - name: Show application logs
+        if: failure()
+        run: docker compose logs api worker
+      - name: Stop application services
+        if: always()
+        run: docker compose down
+
+  containers:
+    name: Containers
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: docker build -f infra/docker/api.Dockerfile -t vendorlens-api:ci .
+      - run: docker build -f infra/docker/worker.Dockerfile -t vendorlens-worker:ci .

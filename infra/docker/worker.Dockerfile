@@ -19,6 +19,7 @@ RUN uv sync --frozen --no-dev --no-install-workspace
 COPY apps/api apps/api
 COPY apps/worker apps/worker
 COPY packages/vendorlens-core packages/vendorlens-core
+COPY supabase supabase
 RUN uv sync --frozen --no-dev --package vendorlens-worker
 
 RUN useradd --create-home --uid 10001 vendorlens
