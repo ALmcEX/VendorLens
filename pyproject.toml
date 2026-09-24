@@ -7,7 +7,7 @@ dependencies = ["vendorlens-api", "vendorlens-core", "vendorlens-worker"]
 [dependency-groups]
 dev = [
   "aiosqlite>=0.21,<1",
-  "mypy>=1.18,<2",
+  "mypy>=2.3.1,<3",
   "pytest>=8.4,<9",
   "pytest-asyncio>=1.2,<2",
   "ruff>=0.13,<1",
