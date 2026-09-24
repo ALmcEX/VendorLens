@@ -6,6 +6,7 @@ dependencies = ["vendorlens-api", "vendorlens-core"]
 
 [dependency-groups]
 dev = [
+  "aiosqlite>=0.21,<1",
   "mypy>=1.18,<2",
   "pytest>=8.4,<9",
   "pytest-asyncio>=1.2,<2",
@@ -32,6 +33,9 @@ target-version = "py313"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["vendorlens_api", "vendorlens_core"]
 
 [tool.mypy]
 python_version = "3.13"

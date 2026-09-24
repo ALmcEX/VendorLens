@@ -4,6 +4,7 @@ import pytest
 from fastapi import Body
 from httpx import ASGITransport, AsyncClient
 from pydantic import BaseModel, Field
+
 from vendorlens_api.main import create_app
 
 

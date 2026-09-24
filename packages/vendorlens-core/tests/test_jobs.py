@@ -1,5 +1,6 @@
 import pytest
 from pydantic import ValidationError
+
 from vendorlens_core.jobs import (
     ExampleJobPayload,
     JobStatus,
