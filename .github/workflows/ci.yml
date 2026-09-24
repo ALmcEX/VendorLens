@@ -51,7 +51,7 @@ jobs:
         with:
           python-version: "3.13"
           enable-cache: true
-      - uses: supabase/setup-cli@v1
+      - uses: supabase/setup-cli@v3
         with:
           version: 2.117.0
       - run: uv sync --frozen --all-packages
