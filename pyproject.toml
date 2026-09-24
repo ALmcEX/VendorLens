@@ -2,7 +2,7 @@
 name = "vendorlens-workspace"
 version = "0.1.0"
 requires-python = ">=3.13,<3.14"
-dependencies = ["vendorlens-core"]
+dependencies = ["vendorlens-api", "vendorlens-core"]
 
 [dependency-groups]
 dev = [
@@ -16,14 +16,15 @@ dev = [
 package = false
 
 [tool.uv.sources]
+vendorlens-api = { workspace = true }
 vendorlens-core = { workspace = true }
 
 [tool.uv.workspace]
-members = ["packages/vendorlens-core"]
+members = ["apps/api", "packages/vendorlens-core"]
 
 [tool.pytest.ini_options]
 addopts = "--strict-config --strict-markers"
-testpaths = ["packages/vendorlens-core/tests"]
+testpaths = ["apps/api/tests", "packages/vendorlens-core/tests"]
 
 [tool.ruff]
 line-length = 100
@@ -35,5 +36,5 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 [tool.mypy]
 python_version = "3.13"
 strict = true
-packages = ["vendorlens_core"]
-mypy_path = ["packages/vendorlens-core/src"]
+packages = ["vendorlens_api", "vendorlens_core"]
+mypy_path = ["apps/api/src", "packages/vendorlens-core/src"]
