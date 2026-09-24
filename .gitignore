@@ -21,6 +21,7 @@ coverage/
 
 # Local platform state
 .supabase/
+.docker/
 .vercel/
 .superpowers/
 

@@ -1,0 +1,43 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: infra/docker/api.Dockerfile
+    environment:
+      PORT: "8000"
+      VENDORLENS_ENVIRONMENT: development
+      VENDORLENS_CORS_ORIGINS: '["http://localhost:3000"]'
+      VENDORLENS_DATABASE_URL: ${VENDORLENS_CONTAINER_DATABASE_URL}
+      VENDORLENS_SUPABASE_URL: ${VENDORLENS_CONTAINER_SUPABASE_URL}
+      VENDORLENS_SUPABASE_SERVICE_ROLE_KEY: ${VENDORLENS_SUPABASE_SERVICE_ROLE_KEY}
+      VENDORLENS_STORAGE_BUCKET: vendor-documents
+      VENDORLENS_QUEUE_NAME: example_jobs
+      VENDORLENS_TRUST_PROXY_HEADERS: "false"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=3)"]
+      interval: 5s
+      timeout: 4s
+      retries: 12
+      start_period: 10s
+
+  worker:
+    build:
+      context: .
+      dockerfile: infra/docker/worker.Dockerfile
+    environment:
+      VENDORLENS_DATABASE_URL: ${VENDORLENS_CONTAINER_DATABASE_URL}
+      VENDORLENS_QUEUE_NAME: example_jobs
+      VENDORLENS_VISIBILITY_TIMEOUT_SECONDS: "30"
+      VENDORLENS_MAX_ATTEMPTS: "3"
+      VENDORLENS_SHUTDOWN_GRACE_SECONDS: "20"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      api:
+        condition: service_healthy
+    init: true
+    stop_grace_period: 25s
